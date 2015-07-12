@@ -1,19 +1,18 @@
 package ernest.movieapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 
 import com.google.common.collect.Lists;
-import com.uwetrottmann.tmdb.Tmdb;
-import com.uwetrottmann.tmdb.entities.MovieResultsPage;
-import com.uwetrottmann.tmdb.enumerations.SortBy;
 import com.uwetrottmann.tmdb.services.DiscoverService;
 
 import java.util.List;
@@ -61,19 +60,72 @@ public class MainActivityFragment extends Fragment implements AdapterView.OnItem
             .build();
         mMovieService = restAdapter.create(MovieDbService.class);
 
-        Tmdb tmdb = new Tmdb();
-        tmdb.setApiKey("22b2875411964b3ccdb006f96d17f5af");
-        mDiscoverService = tmdb.discoverService();
+        setHasOptionsMenu(true);
 
     }
 
-    private MovieResultsPage getMovieByPopularity() {
-        if (mDiscoverService == null) {
-            return null;
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+
+        if (id == R.id.sort_popularity) {
+            mMovieService
+                .getMovieByPopularity()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<PagedResponse>() {
+                    @Override public void onCompleted() {
+
+                    }
+
+                    @Override public void onError(Throwable e) {
+                        Timber.w(e, "error: " + e);
+                    }
+
+                    @Override public void onNext(PagedResponse pagedResponse) {
+                        Timber.w("getting item: size" + pagedResponse.page);
+
+                        for (MovieItem item : pagedResponse.movies) {
+                            Timber.w("name:" + item.title);
+                            Timber.w("utl" + item.posterURL);
+                        }
+
+                        mAdapter.addAll(pagedResponse.movies);
+                    }
+                });
+            return true;
         }
-        return mDiscoverService.discoverMovie(true, true, null, 1, null, null, null, null, null,
-            SortBy.POPULARITY_DESC, null, null, null, null, null, null, null, null, null, null,
-            null);
+
+        if (id == R.id.sort_highest_rated) {
+            mMovieService
+                .getMovieByRating()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<PagedResponse>() {
+                    @Override public void onCompleted() {
+
+                    }
+
+                    @Override public void onError(Throwable e) {
+                        Timber.w(e, "error: " + e);
+                    }
+
+                    @Override public void onNext(PagedResponse pagedResponse) {
+                        Timber.w("getting item: size" + pagedResponse.page);
+
+                        for (MovieItem item : pagedResponse.movies) {
+                            Timber.w("name:" + item.title);
+                            Timber.w("utl" + item.posterURL);
+                        }
+
+                        mAdapter.addAll(pagedResponse.movies);
+                    }
+                });
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -91,33 +143,14 @@ public class MainActivityFragment extends Fragment implements AdapterView.OnItem
         listView.setLayoutManager(mLinearLayoutManager);
         listView.setAdapter(mAdapter);
 
-
-
-//        Async
-//            .fromCallable(new Callable<MovieResultsPage>() {
-//
-//                @Override public MovieResultsPage call() throws Exception {
-//                    MovieResultsPage results = getMovieByPopularity();
-//
-//                    Timber.w("getting page: " + results.page);
-//                    return results;
-//                }
-//
-//            }, Schedulers.io())
-//            .subscribe(new Subscriber<MovieResultsPage>() {
-//
-//                @Override public void onCompleted() {
-//
-//                }
-//
-//                @Override public void onError(Throwable e) {
-//                    Timber.e(e, "error:" + e);
-//                }
-//
-//                @Override public void onNext(MovieResultsPage movieResultsPage) {
-//                    Timber.e("getting item: size" + movieResultsPage.page);
-//                }
-//            });
+        mAdapter.setOnItemClickListener(new OnItemClickListener() {
+            @Override public void onItemClick(MovieViewAdapter adapter, View view, int position) {
+                Timber.w("pos: %d item: %s", position, adapter.getItem(position).title);
+                Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
+                detailIntent.putExtras(adapter.getItem(position).to());
+                startActivity(detailIntent);
+            }
+        });
 
         mMovieService
             .getMovieByPopularity()

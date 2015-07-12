@@ -17,10 +17,11 @@ import ernest.movieapp.data.model.MovieItem;
 import timber.log.Timber;
 
 public class MovieViewAdapter extends RecyclerView.Adapter<MovieViewAdapter.ViewHolder>
-    implements OnItemClickListener {
+    implements OnItemClickListenerProxy {
 
     private final Context mContext;
     private final List<MovieItem> mItems;
+    private OnItemClickListener mListenerProxy;
 
     private LayoutInflater mInflater;
 
@@ -37,6 +38,7 @@ public class MovieViewAdapter extends RecyclerView.Adapter<MovieViewAdapter.View
     public void addAll(Collection<MovieItem> items) {
         Timber.w("addAll");
         synchronized (mItems) {
+            mItems.clear();
             mItems.addAll(items);
         }
         notifyDataSetChanged();
@@ -50,6 +52,12 @@ public class MovieViewAdapter extends RecyclerView.Adapter<MovieViewAdapter.View
             mItems.add(item);
         }
         notifyItemRangeInserted(oldPosition, 1);
+    }
+
+    public MovieItem getItem(int pos) {
+        synchronized (mItems) {
+            return mItems.get(pos);
+        }
     }
 
     @Override public ViewHolder onCreateViewHolder(ViewGroup parent, int i) {
@@ -77,12 +85,20 @@ public class MovieViewAdapter extends RecyclerView.Adapter<MovieViewAdapter.View
     }
 
     @Override public void onItemClick(View view, int position) {
-        Timber.w("position clicked:"+ position);
+        if (mListenerProxy == null) {
+            return;
+        }
+        mListenerProxy.onItemClick(this, view, position);
     }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        mListenerProxy = listener;
+    }
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         ImageView poster;
-        OnItemClickListener listener;
+        OnItemClickListenerProxy listener;
 
         public ViewHolder(View view) {
             super(view);
@@ -99,7 +115,7 @@ public class MovieViewAdapter extends RecyclerView.Adapter<MovieViewAdapter.View
             listener.onItemClick(v, getLayoutPosition());
         }
 
-        public void bindOnItemClickListener(OnItemClickListener listener) {
+        public void bindOnItemClickListener(OnItemClickListenerProxy listener) {
             this.listener = listener;
         }
 
