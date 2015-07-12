@@ -11,10 +11,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Timber.w("onCreate");
         setContentView(R.layout.activity_main);
-        Timber.w("onCreate done");
-
         Timber.plant(new Timber.DebugTree());
     }
 

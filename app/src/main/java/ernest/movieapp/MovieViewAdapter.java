@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.List;
 
 import ernest.movieapp.data.model.MovieItem;
-import timber.log.Timber;
 
 public class MovieViewAdapter extends RecyclerView.Adapter<MovieViewAdapter.ViewHolder>
     implements OnItemClickListenerProxy {
@@ -36,22 +35,11 @@ public class MovieViewAdapter extends RecyclerView.Adapter<MovieViewAdapter.View
      * @param items
      */
     public void addAll(Collection<MovieItem> items) {
-        Timber.w("addAll");
         synchronized (mItems) {
             mItems.clear();
             mItems.addAll(items);
         }
         notifyDataSetChanged();
-    }
-
-    public void add(MovieItem item) {
-        Timber.w("add");
-        int oldPosition = 0;
-        synchronized (mItems) {
-            oldPosition = mItems.size();
-            mItems.add(item);
-        }
-        notifyItemRangeInserted(oldPosition, 1);
     }
 
     public MovieItem getItem(int pos) {
@@ -107,11 +95,9 @@ public class MovieViewAdapter extends RecyclerView.Adapter<MovieViewAdapter.View
         }
 
         @Override public void onClick(View v) {
-            Timber.w("onClick");
             if (listener == null) {
                 return;
             }
-            Timber.w("onClick onItemClick");
             listener.onItemClick(v, getLayoutPosition());
         }
 

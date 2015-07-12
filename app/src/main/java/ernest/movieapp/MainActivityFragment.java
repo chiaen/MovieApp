@@ -10,10 +10,8 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 
 import com.google.common.collect.Lists;
-import com.uwetrottmann.tmdb.services.DiscoverService;
 
 import java.util.List;
 
@@ -29,46 +27,28 @@ import timber.log.Timber;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment implements AdapterView.OnItemClickListener {
+public class MainActivityFragment extends Fragment {
 
     private List<MovieItem> mItems;
     private MovieViewAdapter mAdapter;
     private LinearLayoutManager mLinearLayoutManager;
     private MovieDbService mMovieService;
-    private DiscoverService mDiscoverService;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Timber.w("OnCreate");
-
         // initialize the items list
         mItems = Lists.newArrayList();
-//        String intersteller = "https://image.tmdb.org/t/p/w185//nBNZadXqJSdt05SHLqgT0HuC5Gm.jpg";
-//        mItems.add(new MovieViewAdapter.MovieItem(intersteller));
-//        mItems.add(new MovieViewAdapter.MovieItem(intersteller));
-//        mItems.add(new MovieViewAdapter.MovieItem(intersteller));
-//        mItems.add(new MovieViewAdapter.MovieItem(intersteller));
-//        mItems.add(new MovieViewAdapter.MovieItem("https://image.tmdb
-// .org/t/p/w185//qrFwjJ5nvFnpBCmXLI4YoeHJNBH.jpg"));
-
-        Timber.w("OnCreate done");
-
         RestAdapter restAdapter = new RestAdapter.Builder()
             .setEndpoint("https://api.themoviedb.org/3")
-            .setLogLevel(RestAdapter.LogLevel.FULL)
             .build();
         mMovieService = restAdapter.create(MovieDbService.class);
-
         setHasOptionsMenu(true);
-
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         int id = item.getItemId();
-
         if (id == R.id.sort_popularity) {
             mMovieService
                 .getMovieByPopularity()
@@ -95,9 +75,7 @@ public class MainActivityFragment extends Fragment implements AdapterView.OnItem
                     }
                 });
             return true;
-        }
-
-        if (id == R.id.sort_highest_rated) {
+        } else if (id == R.id.sort_highest_rated) {
             mMovieService
                 .getMovieByRating()
                 .subscribeOn(Schedulers.io())
@@ -166,13 +144,6 @@ public class MainActivityFragment extends Fragment implements AdapterView.OnItem
                 }
 
                 @Override public void onNext(PagedResponse pagedResponse) {
-                    Timber.w("getting item: size" + pagedResponse.page);
-
-                    for (MovieItem item : pagedResponse.movies) {
-                        Timber.w("name:" + item.title);
-                        Timber.w("utl" + item.posterURL);
-                    }
-
                     mAdapter.addAll(pagedResponse.movies);
                 }
             });
@@ -180,7 +151,4 @@ public class MainActivityFragment extends Fragment implements AdapterView.OnItem
         return fragmentView;
     }
 
-    @Override public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Timber.w("OnClick pos: %d, id %d", position, id);
-    }
 }

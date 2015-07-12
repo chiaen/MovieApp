@@ -3,18 +3,20 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" tools:context=".MainActivityFragment">
+    android:orientation="vertical"
+    tools:context=".MainActivityFragment">
 
     <TextView
         android:id="@android:id/text1"
         android:layout_width="match_parent"
         android:layout_height="@dimen/p4"
-        android:textSize="@dimen/f10"
-        android:textColor="@color/detail_title"
+        android:background="@color/detail_title_background"
         android:gravity="center_vertical"
-        android:paddingStart="@dimen/activity_horizontal_margin"
         android:paddingEnd="@dimen/activity_horizontal_margin"
-        android:background="@color/detail_title_background"/>
+        android:paddingStart="@dimen/activity_horizontal_margin"
+        android:textColor="@color/detail_title"
+        android:textSize="@dimen/f10"
+        android:textStyle="bold" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -28,35 +30,35 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="@dimen/activity_horizontal_margin"
                 android:paddingEnd="@dimen/activity_horizontal_margin"
+                android:paddingStart="@dimen/activity_horizontal_margin"
                 android:paddingTop="@dimen/activity_vertical_margin">
 
                 <ImageView
                     android:id="@+id/image"
-                    android:scaleType="centerCrop"
                     android:layout_width="@dimen/p4"
-                    android:layout_height="215dp" />
+                    android:layout_height="215dp"
+                    android:scaleType="centerCrop" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.5"
-                    android:paddingStart="@dimen/activity_horizontal_margin"
+                    android:orientation="vertical"
                     android:paddingEnd="@dimen/activity_horizontal_margin"
-                    android:orientation="vertical">
+                    android:paddingStart="@dimen/activity_horizontal_margin">
 
                     <TextView
                         android:id="@+id/release_date"
-                        android:textSize="@dimen/f10"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/f10" />
 
                     <TextView
                         android:id="@+id/user_rating"
-                        android:textSize="@dimen/f9"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/f9" />
 
                 </LinearLayout>
 
@@ -64,13 +66,12 @@
 
             <TextView
                 android:id="@+id/movie_overview"
-                android:textSize="@dimen/f9"
-                android:paddingStart="@dimen/activity_horizontal_margin"
-                android:paddingEnd="@dimen/activity_horizontal_margin"
-                android:paddingTop="@dimen/activity_vertical_margin"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
+                android:layout_height="wrap_content"
+                android:paddingEnd="@dimen/activity_horizontal_margin"
+                android:paddingStart="@dimen/activity_horizontal_margin"
+                android:paddingTop="@dimen/activity_vertical_margin"
+                android:textSize="@dimen/f9" />
 
         </LinearLayout>
 
