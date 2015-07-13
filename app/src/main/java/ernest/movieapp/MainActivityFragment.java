@@ -37,14 +37,32 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // initialize the items list
-        mItems = Lists.newArrayList();
+
         RestAdapter restAdapter = new RestAdapter.Builder()
             .setEndpoint("https://api.themoviedb.org/3")
             .build();
         mMovieService = restAdapter.create(MovieDbService.class);
         setHasOptionsMenu(true);
+        // initialize the items list
+        mItems = Lists.newArrayList();
+
+        if (savedInstanceState != null) {
+            try {
+                Timber.w("load item");
+                mItems = savedInstanceState.getParcelableArrayList("items");
+                Timber.w("load item:", mItems.size());
+            } catch (Throwable ignored) {
+                Timber.w(ignored, "exception");
+            }
+        }
     }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        Timber.w("onSave");
+        outState.putParcelableArrayList("items", Lists.newArrayList(mItems));
+    }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -130,23 +148,26 @@ public class MainActivityFragment extends Fragment {
             }
         });
 
-        mMovieService
-            .getMovieByPopularity()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(new Subscriber<PagedResponse>() {
-                @Override public void onCompleted() {
+        if (mItems.isEmpty()) {
+            Timber.w("trigger");
+            mMovieService
+                .getMovieByPopularity()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<PagedResponse>() {
+                    @Override public void onCompleted() {
 
-                }
+                    }
 
-                @Override public void onError(Throwable e) {
-                    Timber.w(e, "error: " + e);
-                }
+                    @Override public void onError(Throwable e) {
+                        Timber.w(e, "error: " + e);
+                    }
 
-                @Override public void onNext(PagedResponse pagedResponse) {
-                    mAdapter.addAll(pagedResponse.movies);
-                }
-            });
+                    @Override public void onNext(PagedResponse pagedResponse) {
+                        mAdapter.addAll(pagedResponse.movies);
+                    }
+                });
+        }
 
         return fragmentView;
     }

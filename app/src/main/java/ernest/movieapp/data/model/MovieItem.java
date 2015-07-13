@@ -1,10 +1,12 @@
 package ernest.movieapp.data.model;
 
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
 
-public class MovieItem {
+public class MovieItem implements Parcelable {
 
     @SerializedName("poster_path") public final String posterURL;
 
@@ -22,6 +24,14 @@ public class MovieItem {
         this.overview = overview;
         this.rating = rating;
         this.date = date;
+    }
+
+    private MovieItem(Parcel in) {
+        this.posterURL = in.readString();
+        this.title = in.readString();
+        this.overview = in.readString();
+        this.rating = in.readFloat();
+        this.date = in.readString();
     }
 
     public String getPosterUrl() {
@@ -43,5 +53,30 @@ public class MovieItem {
             bundle.getString("overview"), bundle.getFloat("vote_average"),
             bundle.getString("release_date"));
     }
+
+    @Override public int describeContents() {
+        return 0;
+    }
+
+    @Override public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.posterURL);
+        dest.writeString(this.title);
+        dest.writeString(this.overview);
+        dest.writeFloat(this.rating);
+        dest.writeString(this.date);
+    }
+
+    public static final Parcelable.Creator<MovieItem> CREATOR
+        = new Parcelable.Creator<MovieItem>() {
+
+        public MovieItem createFromParcel(Parcel in) {
+            return new MovieItem(in);
+        }
+
+        public MovieItem[] newArray(int size) {
+            return new MovieItem[size];
+        }
+
+    };
 
 }
