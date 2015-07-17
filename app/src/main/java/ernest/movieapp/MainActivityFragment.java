@@ -1,6 +1,7 @@
 package ernest.movieapp;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
@@ -13,7 +14,7 @@ import android.view.ViewGroup;
 
 import com.google.common.collect.Lists;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import ernest.movieapp.data.api.MovieDbService;
 import ernest.movieapp.data.model.MovieItem;
@@ -29,15 +30,15 @@ import timber.log.Timber;
  */
 public class MainActivityFragment extends Fragment {
 
-    private List<MovieItem> mItems;
+    private static final String KEY_ITEMS = "items";
+
+    private ArrayList<MovieItem> mItems;
     private MovieViewAdapter mAdapter;
-    private LinearLayoutManager mLinearLayoutManager;
     private MovieDbService mMovieService;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         RestAdapter restAdapter = new RestAdapter.Builder()
             .setEndpoint("https://api.themoviedb.org/3")
             .build();
@@ -45,24 +46,13 @@ public class MainActivityFragment extends Fragment {
         setHasOptionsMenu(true);
         // initialize the items list
         mItems = Lists.newArrayList();
-
-        if (savedInstanceState != null) {
-            try {
-                Timber.w("load item");
-                mItems = savedInstanceState.getParcelableArrayList("items");
-                Timber.w("load item:", mItems.size());
-            } catch (Throwable ignored) {
-                Timber.w(ignored, "exception");
-            }
-        }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        Timber.w("onSave");
-        outState.putParcelableArrayList("items", Lists.newArrayList(mItems));
+        super.onSaveInstanceState(outState);
+        outState.putParcelableArrayList(KEY_ITEMS, Lists.newArrayList(mItems));
     }
-
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -82,13 +72,7 @@ public class MainActivityFragment extends Fragment {
                     }
 
                     @Override public void onNext(PagedResponse pagedResponse) {
-                        Timber.w("getting item: size" + pagedResponse.page);
-
-                        for (MovieItem item : pagedResponse.movies) {
-                            Timber.w("name:" + item.title);
-                            Timber.w("utl" + item.posterURL);
-                        }
-
+                        mItems = Lists.newArrayList(pagedResponse.movies);
                         mAdapter.addAll(pagedResponse.movies);
                     }
                 });
@@ -108,13 +92,7 @@ public class MainActivityFragment extends Fragment {
                     }
 
                     @Override public void onNext(PagedResponse pagedResponse) {
-                        Timber.w("getting item: size" + pagedResponse.page);
-
-                        for (MovieItem item : pagedResponse.movies) {
-                            Timber.w("name:" + item.title);
-                            Timber.w("utl" + item.posterURL);
-                        }
-
+                        mItems = Lists.newArrayList(pagedResponse.movies);
                         mAdapter.addAll(pagedResponse.movies);
                     }
                 });
@@ -127,29 +105,41 @@ public class MainActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
         Bundle savedInstanceState) {
-        Timber.w("OnCreateView");
-        View fragmentView = inflater.inflate(R.layout.fragment_main, container, false);
+        View rootView = super.onCreateView(inflater, container, savedInstanceState);
+        if (rootView == null) {
+            rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        }
+        LinearLayoutManager linearLayoutManager;
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            linearLayoutManager = new GridLayoutManager(getActivity(), 3);
+            mAdapter = new MovieViewAdapter(getActivity(), 3);
+        } else {
+            linearLayoutManager = new GridLayoutManager(getActivity(), 5);
+            mAdapter = new MovieViewAdapter(getActivity(), 5);
+        }
 
-        mLinearLayoutManager = new GridLayoutManager(getActivity(), 2);
-
-        mAdapter = new MovieViewAdapter(getActivity());
-
-        RecyclerView listView = (RecyclerView) fragmentView.findViewById(android.R.id.list);
+        RecyclerView listView = (RecyclerView) rootView.findViewById(android.R.id.list);
         listView.setHasFixedSize(true);
-        listView.setLayoutManager(mLinearLayoutManager);
+        listView.setLayoutManager(linearLayoutManager);
         listView.setAdapter(mAdapter);
 
         mAdapter.setOnItemClickListener(new OnItemClickListener() {
             @Override public void onItemClick(MovieViewAdapter adapter, View view, int position) {
-                Timber.w("pos: %d item: %s", position, adapter.getItem(position).title);
                 Intent detailIntent = new Intent(getActivity(), DetailActivity.class);
                 detailIntent.putExtras(adapter.getItem(position).to());
                 startActivity(detailIntent);
             }
         });
 
-        if (mItems.isEmpty()) {
-            Timber.w("trigger");
+        if (savedInstanceState != null) {
+            try {
+                mItems = savedInstanceState.getParcelableArrayList(KEY_ITEMS);
+            } catch (Throwable ignored) {
+                Timber.w(ignored, "exception");
+            }
+        }
+
+        if (mItems != null && mItems.isEmpty()) {
             mMovieService
                 .getMovieByPopularity()
                 .subscribeOn(Schedulers.io())
@@ -164,12 +154,17 @@ public class MainActivityFragment extends Fragment {
                     }
 
                     @Override public void onNext(PagedResponse pagedResponse) {
+                        mItems = Lists.newArrayList(pagedResponse.movies);
                         mAdapter.addAll(pagedResponse.movies);
                     }
                 });
+        } else {
+            mAdapter.addAll(mItems);
         }
 
-        return fragmentView;
+        setHasOptionsMenu(true);
+
+        return rootView;
     }
 
 }

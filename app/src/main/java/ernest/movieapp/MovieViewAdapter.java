@@ -1,10 +1,12 @@
 package ernest.movieapp;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ImageView;
 
 import com.google.common.collect.Lists;
@@ -20,13 +22,23 @@ public class MovieViewAdapter extends RecyclerView.Adapter<MovieViewAdapter.View
 
     private final Context mContext;
     private final List<MovieItem> mItems;
-    private OnItemClickListener mListenerProxy;
+    private final int mGridWidth;
+    private final int mGridHeight;
 
+
+    private OnItemClickListener mListenerProxy;
     private LayoutInflater mInflater;
 
-    public MovieViewAdapter(Context context) {
+
+    public MovieViewAdapter(Context context, int col) {
         mContext = context;
         mItems = Lists.newArrayList();
+        Point point = new Point();
+        WindowManager windowManager
+            = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        windowManager.getDefaultDisplay().getSize(point);
+        this.mGridWidth = point.x / col;
+        this.mGridHeight = (int) Math.round((float) mGridWidth * 1.51);
     }
 
     /**
@@ -52,16 +64,19 @@ public class MovieViewAdapter extends RecyclerView.Adapter<MovieViewAdapter.View
         if (mInflater == null) {
             mInflater = LayoutInflater.from(parent.getContext());
         }
+
         return new ViewHolder(mInflater.inflate(R.layout.movie_poster, parent, false));
     }
 
     @Override public void onBindViewHolder(ViewHolder viewHolder, int position) {
         MovieItem item = mItems.get(position);
+        ViewGroup.LayoutParams params = viewHolder.poster.getLayoutParams();
+        params.width = mGridWidth;
+        params.height = mGridHeight;
+        viewHolder.poster.setLayoutParams(params);
         Picasso
             .with(mContext)
             .load(item.getPosterUrl())
-            .resize(185, 277)
-            .centerCrop()
             .into(viewHolder.poster);
         viewHolder.bindOnItemClickListener(this);
     }
